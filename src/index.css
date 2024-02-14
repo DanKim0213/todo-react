@@ -294,3 +294,7 @@ body {
   opacity: 1;
 }
 /* End checkbox styles */
+
+.alert {
+  border: 3px solid #bd2130; 
+}

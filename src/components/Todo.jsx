@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * The reason why this hook can return the previous value is that
+ * it returns `ref.current`, not `ref` itself.
+ *
+ * And, `ref.current` is assigned to a **new** value by `useEffect()`
+ * whenever `setState()` is called.
+ * (It could be assigned to a **new** object too.)
+ */
 function usePrevious(value) {
   const ref = useRef(null);
   useEffect(() => {
-    ref.current = value;
+    ref.current = value; // assign **newly created value e.g. [value], { value }
   });
   return ref.current;
 }
@@ -11,6 +19,7 @@ function usePrevious(value) {
 function Todo(props) {
   const [isEditing, setEditing] = useState(false);
   const [newName, setNewName] = useState("");
+  const isEmpty = newName.trim().length === 0;
 
   const editFieldRef = useRef(null);
   const editButtonRef = useRef(null);
@@ -26,6 +35,8 @@ function Todo(props) {
   // working through MDN's React tutorial.
   function handleSubmit(event) {
     event.preventDefault();
+    if (isEmpty) return;
+
     props.editTask(props.id, newName);
     setNewName("");
     setEditing(false);
@@ -39,7 +50,7 @@ function Todo(props) {
         </label>
         <input
           id={props.id}
-          className="todo-text"
+          className={`todo-text ${isEmpty && "alert"}`}
           type="text"
           value={newName}
           onChange={handleChange}
@@ -50,7 +61,8 @@ function Todo(props) {
         <button
           type="button"
           className="btn todo-cancel"
-          onClick={() => setEditing(false)}>
+          onClick={() => setEditing(false)}
+        >
           Cancel
           <span className="visually-hidden">renaming {props.name}</span>
         </button>
@@ -82,13 +94,15 @@ function Todo(props) {
           onClick={() => {
             setEditing(true);
           }}
-          ref={editButtonRef}>
+          ref={editButtonRef}
+        >
           Edit <span className="visually-hidden">{props.name}</span>
         </button>
         <button
           type="button"
           className="btn btn__danger"
-          onClick={() => props.deleteTask(props.id)}>
+          onClick={() => props.deleteTask(props.id)}
+        >
           Delete <span className="visually-hidden">{props.name}</span>
         </button>
       </div>
@@ -96,6 +110,7 @@ function Todo(props) {
   );
 
   useEffect(() => {
+    // console.log("wasEditing and isEditing: ", wasEditing, isEditing);
     if (!wasEditing && isEditing) {
       editFieldRef.current.focus();
     } else if (wasEditing && !isEditing) {
