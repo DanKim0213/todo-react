@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
 
 import App from "../src/App";
-import Todo from "../src/components/Todo";
+import MockTodo from "../src/components/Todo";
 
 jest.mock("nanoid", () => {
   return {
@@ -19,36 +19,40 @@ const tasks = [
 ];
 
 describe("Filter Integration test", () => {
-  let mockTodo;
-
-  beforeEach(() => {
-    mockTodo = jest.fn((props) => "this is: " + props);
-    Todo.mockImplementation((props) => {
-      return mockTodo({
-        id: props.id,
-        name: props.name,
-        completed: props.completed,
-      });
-    });
+  afterEach(() => {
+    MockTodo.mockClear();
   });
 
   it("filters tasks by All initially", async () => {
     render(<App tasks={tasks} />);
 
-    expect(mockTodo).toHaveBeenCalledTimes(2);
+    expect(MockTodo).toHaveBeenCalledTimes(2);
     const $filter = screen.getByRole("button", { pressed: true });
 
     expect($filter).toHaveTextContent(/all/i);
   });
 
   it("changes the filter to show only completed tasks", async () => {
+    MockTodo.mockImplementation((props) =>
+      JSON.stringify({
+        id: props.id,
+        name: props.name,
+        completed: props.completed,
+      })
+    );
     render(<App tasks={tasks} />);
 
-    expect(mockTodo).toHaveBeenCalledTimes(2);
-    mockTodo.mockClear();
+    expect(MockTodo).toHaveBeenCalledTimes(2);
+    MockTodo.mockClear();
     const $filter = screen.getByRole("button", { name: /complete/i });
     await userEvent.click($filter);
 
-    expect(mockTodo).toHaveBeenCalledWith(tasks[1]);
+    expect(MockTodo).toHaveReturnedWith(
+      JSON.stringify({
+        id: tasks[1].id,
+        name: tasks[1].name,
+        completed: tasks[1].completed,
+      })
+    );
   });
 });
