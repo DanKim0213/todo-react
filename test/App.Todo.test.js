@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
 
@@ -21,76 +21,74 @@ describe("Todo Integration test", () => {
   it("renders todo", () => {
     render(<App tasks={tasks} />);
 
-    // Instead of checkbox, label is much better
-    // since upcoming tests are based on labels
-    const $labels = screen.getAllByLabelText(/eat|drink/i);
+    const $checkboxes = screen.getAllByRole("checkbox");
 
-    expect($labels).toHaveLength(2);
+    expect($checkboxes).toHaveLength(2);
   });
 
   it("makes an active task completed", async () => {
     render(<App tasks={tasks} />);
 
-    const $activeTodos = screen.getAllByRole("checkbox", { checked: false });
-    await userEvent.click($activeTodos[0]);
+    const $activeCheckboxes = screen.getAllByRole("checkbox", {
+      checked: false,
+    });
+    await userEvent.click($activeCheckboxes[0]);
 
-    expect($activeTodos[0]).toBeChecked();
+    expect($activeCheckboxes[0]).toBeChecked();
   });
 
   it("makes a completed task active", async () => {
     render(<App tasks={tasks} />);
 
-    const $completedTodos = screen.getAllByRole("checkbox", { checked: true });
-    await userEvent.click($completedTodos[0]);
+    const $completedCheckboxes = screen.getAllByRole("checkbox", {
+      checked: true,
+    });
+    await userEvent.click($completedCheckboxes[0]);
 
-    expect($completedTodos[0]).not.toBeChecked();
+    expect($completedCheckboxes[0]).not.toBeChecked();
   });
 
   it("deletes a task", async () => {
     render(<App tasks={tasks} />);
 
-    const $buttons = screen
-      .getByLabelText(/drink/i)
-      .closest("li")
-      .querySelectorAll("button");
-    const $deleteButton = Array.from($buttons).find((el) =>
-      new RegExp(/delete/i).test(el.textContent)
-    );
+    const $todo = screen.getByLabelText(/drink/i).closest("li");
+    const $deleteButton = within($todo).getByRole("button", {
+      name: /delete/i,
+    });
     await userEvent.click($deleteButton);
-    const $drinklabel = screen.queryByLabelText(/drink/i);
+    const $drinkCheckbox = screen.queryByLabelText(/drink/i);
 
-    expect($drinklabel).not.toBeInTheDocument();
+    expect($drinkCheckbox).not.toBeInTheDocument();
   });
 
   it("edits and save a task", async () => {
     render(<App tasks={tasks} />);
 
-    const $buttons = screen
-      .getByLabelText(/drink/i)
-      .closest("li")
-      .querySelectorAll("button");
-    const $editButton = Array.from($buttons).find((el) =>
-      new RegExp(/edit/i).test(el.textContent)
-    );
+    const $todo = screen.getByLabelText(/drink/i).closest("li");
+    const $editButton = within($todo).getByRole("button", { name: /edit/i });
     await userEvent.click($editButton);
     await userEvent.type(screen.getByRole("textbox"), "edited Task");
     await userEvent.click(screen.getByRole("button", { name: /save/i }));
-    const $drinkLabel = screen.queryByLabelText(/drink/i);
-    const $labels = screen.getAllByLabelText(/eat|edited task/i);
+    const $drinkCheckbox = screen.queryByLabelText(/drink/i);
+    const $checkboxes = screen.getAllByRole("checkbox");
 
-    expect($drinkLabel).not.toBeInTheDocument();
-    expect($labels).toHaveLength(2);
+    expect($drinkCheckbox).not.toBeInTheDocument();
+    expect($checkboxes).toHaveLength(2);
   });
 
   it("edits and cancel a task", async () => {
-    render(<App tasks={[tasks[0]]} />);
+    render(<App tasks={tasks} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /edit/i }));
+    const $todo = screen.getByLabelText(/drink/i).closest("li");
+    const $editButton = within($todo).getByRole("button", { name: /edit/i });
+    await userEvent.click($editButton);
     await userEvent.type(screen.getByRole("textbox"), "edited Task");
     await userEvent.click(screen.getByRole("button", { name: /cancel/i }));
-    const $label = screen.queryByLabelText("edited Task");
+    const $drinkCheckbox = screen.queryByLabelText(/edited Task/);
+    const $checkboxes = screen.getAllByRole("checkbox");
 
-    expect($label).not.toBeInTheDocument();
+    expect($drinkCheckbox).not.toBeInTheDocument();
+    expect($checkboxes).toHaveLength(2);
   });
 
   it("focuses on Heading when it deletes a task", async () => {

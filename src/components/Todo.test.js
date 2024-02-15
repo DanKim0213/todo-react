@@ -7,9 +7,9 @@ describe("Todo", () => {
   it("renders Todo component", () => {
     render(<Todo name="Eat" id="todo-0" />);
 
-    const $taskLabel = screen.getByLabelText(/eat/i);
+    const $taskCheckbox = screen.getByLabelText(/eat/i);
 
-    expect($taskLabel).toBeInTheDocument();
+    expect($taskCheckbox).toBeInTheDocument();
   });
 
   it("edits a task", async () => {

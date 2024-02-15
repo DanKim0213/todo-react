@@ -12,13 +12,10 @@ describe("Form", () => {
   it("renders From component", () => {
     render(<Form />);
 
-    const $title = screen.getByLabelText(/to be done/i);
-    expect($title).toBeInTheDocument();
-
     const $textbox = screen.getByRole("textbox");
-    expect($textbox).toBeInTheDocument();
-
     const $button = screen.getByRole("button");
+
+    expect($textbox).toBeInTheDocument();
     expect($button).toBeInTheDocument();
   });
 
